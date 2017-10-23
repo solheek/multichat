@@ -81,13 +81,11 @@ int main() {
 	read(clientsd, recvBuf, sizeof(recvBuf));
 	cout << recvBuf << " Chatting started. " <<endl;
 
-	int status;
-
 	pthread_create(&recv_th, NULL, recv_chat, (void *)clientsd);
 	pthread_create(&send_th, NULL, send_chat, (void *)clientsd);
 
-	pthread_join(recv_th, (void **)status);
-	pthread_join(send_th, (void **)status);
+	pthread_join(recv_th, NULL);
+	pthread_join(send_th, NULL);
 
 	cout << "=> Ended connection.." << endl;
 	close(clientsd);
