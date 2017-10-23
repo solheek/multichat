@@ -38,8 +38,7 @@ void *send_chat(void *sd) {
 	char str[BUFSIZE];
 
 	while(1) {
-		memset(sendBuf, 0, sizeof(sendBuf));
-		//gets(sendBuf);
+		memset(sendBuf, 0, sizeof(sendBuf));		
 		cin >> sendBuf;
 		
 		if(sizeof(sendBuf) > 1)
@@ -54,7 +53,6 @@ int main() {
 	int clientsd;
 	char sendBuf[BUFSIZE];
 	char recvBuf[BUFSIZE];
-	char *ip = "127.0.0.1";
 	int portNum = 6743;
 
 	struct sockaddr_in serverAddr;
