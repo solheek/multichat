@@ -1,6 +1,5 @@
 #include <iostream>
 #include <stdio.h>
-//#include <mysql.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -98,14 +97,8 @@ int main() {
 		cout << "\nListen Error." <<endl;
 		exit(1);
 	}
-
-	socklen_t serverlen = sizeof(serverAddr); //소켓 주소 정보를 포함한 sockaddr구조체를 가리키는 포인터 
-
-	//소켓서버의 address를 serverAddr에 저장
-	
-	
+			
 	cout << "=> Server is running on port " << ntohs(serverAddr.sin_port) <<endl;
-
 
 	/******* Chat ******/
 	while(1) {
