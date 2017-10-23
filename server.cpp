@@ -102,7 +102,7 @@ int main() {
 	socklen_t serverlen = sizeof(serverAddr); //소켓 주소 정보를 포함한 sockaddr구조체를 가리키는 포인터 
 
 	//소켓서버의 address를 serverAddr에 저장
-	//getsockname(listensd, (struct sockaddr *)&serverAddr, &serverlen);
+	
 	
 	cout << "=> Server is running on port " << ntohs(serverAddr.sin_port) <<endl;
 
