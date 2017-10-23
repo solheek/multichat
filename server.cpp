@@ -16,7 +16,6 @@ using namespace std;
 pthread_mutex_t mutex_lock; //mutex object 
 
 /* shared resource */
-char sendbuf[BUFSIZE]; //send to all clients
 char recvbuf[BUFSIZE]; //receive from client
 char endbuf[2];
 int cNum; //count client
@@ -27,25 +26,24 @@ int listensd = -1;
 void *chat(void *sd) {	
 	int *sock = (int *)&sd; 
 	int len;
-	char str[BUFSIZE];
+	char sendbuf[BUFSIZE];
 
-	sprintf(str, "%s %d %s", "\n=> You're < client ", (*sock)+1, ">. ");	
-
+	sprintf(sendbuf, "%s %d %s", "\n=> You're < client ", (*sock)+1, ">. ");	
 	cout << "New < client " << (*sock)+1 << " > is accessed" << endl;
-	send(socks[*sock], str, sizeof(str), 0);
+	send(socks[*sock], sendbuf, sizeof(sendbuf), 0);
 	
 	while(1){
-		memset(str, 0, sizeof(str));
+		memset(sendbuf, 0, sizeof(sendbuf));
 		read(socks[*sock], recvbuf, sizeof(recvbuf));
 
 		cout << "** Client " << (*sock)+1 << ": " << recvbuf << endl;
 	
-		sprintf(str, "%s %d", "Client",(*sock)+1);
-		strcat(str, ": ");
-		strcat(str, recvbuf);
+		sprintf(sendbuf, "%s %d", "Client",(*sock)+1);
+		strcat(sendbuf, ": ");
+		strcat(sendbuf, recvbuf);
 		for(int i=0 ; i<sizeof(socks) ; i++) {
 			if (i!=(*sock))
-				send(socks[i], str, sizeof(str),0);
+				send(socks[i], sendbuf, sizeof(sendbuf),0);
 		}
 	}
 }
@@ -69,9 +67,7 @@ void *end_chat(void *sd) {
 	exit(0);
 }
 
-int main() {
-//	int listensd; 
-
+int main() { 
 	struct sockaddr_in serverAddr; 
 	socklen_t size; 
 	pthread_t thread;
@@ -106,7 +102,7 @@ int main() {
 	socklen_t serverlen = sizeof(serverAddr); //소켓 주소 정보를 포함한 sockaddr구조체를 가리키는 포인터 
 
 	//소켓서버의 address를 serverAddr에 저장
-	getsockname(listensd, (struct sockaddr *)&serverAddr, &serverlen);
+	//getsockname(listensd, (struct sockaddr *)&serverAddr, &serverlen);
 	
 	cout << "=> Server is running on port " << ntohs(serverAddr.sin_port) <<endl;
 
