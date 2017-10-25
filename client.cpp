@@ -19,7 +19,6 @@ char recvBuf[BUFSIZE];
 
 void *recv_chat(void *sd) {
 	int *sock = (int *)&sd;
-	char str[BUFSIZE];
 
 	while(1) {
 		read(*sock, recvBuf, sizeof(recvBuf));	
@@ -27,6 +26,7 @@ void *recv_chat(void *sd) {
 
 		if(*recvBuf == '#'){
 			close(*sock);
+			cout << "\n**Chatting is closed.**\n" << endl;
 			exit(0);
 		}
 	}
@@ -35,7 +35,6 @@ void *recv_chat(void *sd) {
 
 void *send_chat(void *sd) {
 	int *sock = (int*)&sd;
-	char str[BUFSIZE];
 
 	while(1) {
 		memset(sendBuf, 0, sizeof(sendBuf));		
@@ -51,8 +50,6 @@ void *send_chat(void *sd) {
 
 int main() {
 	int clientsd;
-	char sendBuf[BUFSIZE];
-	char recvBuf[BUFSIZE];
 	int portNum = 6743;
 
 	struct sockaddr_in serverAddr;
@@ -79,7 +76,15 @@ int main() {
 	
 	memset(recvBuf, 0, sizeof(recvBuf));
 	read(clientsd, recvBuf, sizeof(recvBuf));
-	cout << recvBuf << " Chatting started. " <<endl;
+
+	if(*recvBuf != '#'){
+		cout << recvBuf << " Chatting started. " << endl;
+	}
+	else {
+		close(clientsd);
+		cout << "\n**Members are alreay 10. You can't enter the chat.**\n" << endl;
+		return 0;	
+	}
 
 	pthread_create(&recv_th, NULL, recv_chat, (void *)clientsd);
 	pthread_create(&send_th, NULL, send_chat, (void *)clientsd);
