@@ -36,6 +36,7 @@ void *chat(void *sd) {
 
 		memset(sendbuf, 0, sizeof(sendbuf));
 	
+		pthread_mutex_trylock(&mutex);
 		read(socks[*sock], recvbuf, sizeof(recvbuf));
 
 		cout << "** Client " << (*sock)+1 << ": " << recvbuf << endl;
@@ -46,6 +47,7 @@ void *chat(void *sd) {
 			if(i!=(*sock))
 				send(socks[i], sendbuf, sizeof(sendbuf),0);
 		}
+		pthread_mutex_unlock(&mutex);
 	
 	}
 }
