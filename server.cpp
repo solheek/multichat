@@ -16,18 +16,16 @@ using namespace std;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;//imutex object 
 
 /* shared resource */
-char recvbuf[BUFSIZE]; //receive from client
-char endbuf[2];
-int cNum; //count client
+char recvbuf[BUFSIZE]={0}; //receive from client
+char endbuf[2]={0};
+int cNum=0; //count client
 int socks[10]; //max client is 10
-
-int listensd = -1;
-
-pthread_t thread[10] = {0};
+int listensd=-1;
+pthread_t thread[10]={0};
 
 void *chat(void *sd) {	
 	int *sock = (int *)&sd; 
-	char sendbuf[BUFSIZE];
+	char sendbuf[BUFSIZE]={0};
 
 	sprintf(sendbuf, "%s %d %s", "\n=> You're < client ", (*sock)+1, ">. ");	
 	cout << "New < client " << (*sock)+1 << " > is accessed" << endl;
@@ -134,7 +132,7 @@ int main() {
 		connectsd = accept(listensd, (struct sockaddr*)&clientAddr, &size);
 		ip_addr = inet_ntoa(clientAddr.sin_addr);
 
-		if(cNum < 10 && connectsd>0){ //MAX: 2 people
+		if(cNum<10 && connectsd>0){ //MAX: 10 people
 			cout << "\n=> New connection from " << ip_addr << endl;
 			socks[cNum++] = connectsd;
 			cout << "=> Total client is " << cNum  << ". "<< endl;
