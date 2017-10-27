@@ -16,7 +16,6 @@ using namespace std;
 
 char sendBuf[BUFSIZE]={0};
 char recvBuf[BUFSIZE]={0};
-
 pthread_t recv_th;
 pthread_t send_th;
 

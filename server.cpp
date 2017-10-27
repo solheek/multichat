@@ -15,7 +15,6 @@
 using namespace std;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;//imutex object 
 
-/* shared resource */
 char recvbuf[BUFSIZE]={0}; //receive from client
 char endbuf[2]={0};
 int cNum=0; //count client
