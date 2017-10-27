@@ -14,8 +14,11 @@
 
 using namespace std;
 
-char sendBuf[BUFSIZE];
-char recvBuf[BUFSIZE];
+char sendBuf[BUFSIZE]={0};
+char recvBuf[BUFSIZE]={0};
+
+pthread_t recv_th;
+pthread_t send_th;
 
 void *recv_chat(void *sd) {
 	int *sock = (int *)&sd;
@@ -26,17 +29,20 @@ void *recv_chat(void *sd) {
 
 		if(*recvBuf == '#'){
 			close(*sock);
-			cout << "\n**Chatting is closed.**\n" << endl;
-			exit(0);
+			pthread_cancel(send_th);
+			break;
 		}
 	}
+	//cout << "recv chat out" << endl;
+	return 0;
 }
 
 
 void *send_chat(void *sd) {
 	int *sock = (int*)&sd;
 
-	while(1) {
+	while(*recvBuf != '#') {
+		//cout << "Input-----------------" << endl;
 		memset(sendBuf, 0, sizeof(sendBuf));		
 		cin >> sendBuf;
 		
@@ -44,17 +50,15 @@ void *send_chat(void *sd) {
 			send(*sock, sendBuf, BUFSIZE, 0);
 	}
 
-	cout << "=> Ended Connection...Bye" << endl;
-	exit(1);
+	//cout << "send chat out" << endl;
+	return 0;
 }
 
 int main() {
-	int clientsd;
+	int clientsd = -1;
 	int portNum = 6743;
 
 	struct sockaddr_in serverAddr;
-
-	pthread_t recv_th, send_th;
 
 	clientsd = socket(AF_INET, SOCK_STREAM, 0);
 

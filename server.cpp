@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <fcntl.h>
 
 #define BUFSIZE 1024
 
@@ -22,6 +23,8 @@ int socks[10]; //max client is 10
 
 int listensd = -1;
 
+pthread_t thread[10] = {0};
+
 void *chat(void *sd) {	
 	int *sock = (int *)&sd; 
 	char sendbuf[BUFSIZE];
@@ -30,52 +33,59 @@ void *chat(void *sd) {
 	cout << "New < client " << (*sock)+1 << " > is accessed" << endl;
 	send(socks[*sock], sendbuf, sizeof(sendbuf), 0);
 	
-	while(1){
-		if(*endbuf == '#')
-			break; 
-
+	while(1){ 
 		memset(sendbuf, 0, sizeof(sendbuf));
-	
+		memset(recvbuf, 0, sizeof(recvbuf));
+
 		pthread_mutex_trylock(&mutex);
 		read(socks[*sock], recvbuf, sizeof(recvbuf));
 
-		cout << "** Client " << (*sock)+1 << ": " << recvbuf << endl;
-	
-		sprintf(sendbuf, "%s %d %s", "Client",(*sock)+1, ": ");
-		strncat(sendbuf, recvbuf, 1000);
-		for(int i=0 ; i<sizeof(socks) ; i++) {
-			if(i!=(*sock))
-				send(socks[i], sendbuf, sizeof(sendbuf),0);
+		if(strlen(recvbuf)>=1 && recvbuf[0]!=0){
+			cout << "** Client " << (*sock)+1 << ": " << recvbuf << endl;
+			//cout << "buflen " << strlen(recvbuf) << endl;
+
+			sprintf(sendbuf, "%s %d %s", "Client",(*sock)+1, ": ");
+			strncat(sendbuf, recvbuf, 1000);
+			for(int i=0 ; i<sizeof(socks) ; i++) {
+				if(i!=(*sock))
+					send(socks[i], sendbuf, sizeof(sendbuf),0);
+			}
 		}
 		pthread_mutex_unlock(&mutex);
-	
+
+		if(*endbuf == '#')
+			break;
 	}
+	
+	//cout << "client chat thread out" << endl;
+	pthread_exit(NULL);
 }
 
 void *end_chat(void *sd) {
 	int *sock = (int *)&sd;
+	int i = 0;
 
 	memset(endbuf, 0, sizeof(endbuf));
 	while(1) {
 		gets(endbuf);
 
 		if(*endbuf == '#'){
-			for(int i=0 ; i<cNum; i++){
+			for(i=0 ; i<cNum; i++){
 				send(socks[i], endbuf, sizeof(endbuf), 0);
 				close(socks[i]);
 			}
+			break;
 		}
-		break;
 	}
-	close(listensd);
-	cout << "=> Close Chatting." << endl;
-	exit(0);
+	
+	//cout << "endchat thread out" << endl;
+	pthread_exit(NULL);
+	return 0;
 }
 
 int main() { 
 	struct sockaddr_in serverAddr; 
 	socklen_t size; 
-	pthread_t thread[10];
 	pthread_t end_thread;
 
 	int i=0;
@@ -83,6 +93,7 @@ int main() {
 	memset(thread, 0, sizeof(thread));
 
 	listensd = socket(PF_INET, SOCK_STREAM, 0); //IPv4 protocol
+	fcntl(listensd, F_SETFL, listensd | O_NONBLOCK);
 
 	if(listensd == -1) {
 		cout << "\nFailed to create socket server." << endl;
@@ -109,38 +120,39 @@ int main() {
 	}
 			
 	cout << "=> Server is running on port " << ntohs(serverAddr.sin_port) <<endl;
-
 	/******* Chat ******/
-	while(1) {
-		int connectsd;
+
+	pthread_create(&end_thread, NULL, end_chat, (void *)(listensd));
+
+	while(*endbuf != '#') {
+		int connectsd = -1;
 		char *ip_addr;
 		
 		struct sockaddr_in clientAddr;
 		size = sizeof(clientAddr);
-
+	
 		connectsd = accept(listensd, (struct sockaddr*)&clientAddr, &size);
 		ip_addr = inet_ntoa(clientAddr.sin_addr);
 
-		if(cNum < 10){ //MAX: 2 people
+		if(cNum < 10 && connectsd>0){ //MAX: 2 people
 			cout << "\n=> New connection from " << ip_addr << endl;
 			socks[cNum++] = connectsd;
 			cout << "=> Total client is " << cNum  << ". "<< endl;
 			pthread_create(&thread[cNum-1], NULL, chat, (void *)(cNum-1));
-			pthread_create(&end_thread, NULL, end_chat, (void *)(listensd));
 		}
-		else {
+		else if (cNum >= 10){
 			cout << "\n=> Total client is already 10. Can't accept more client.\n" << endl;
 			send(connectsd, "#", sizeof(endbuf),0);
 		}
-
 	}	
 
-	//for(i=0 ; i<sizeof(thread) ; i++){
-	//	if(thread[i] != 0)
-	//		pthread_join(thread[i], NULL);
-	//}
+	//cout << "main end " << endl;
 
-	//pthread_join(end_thread, NULL);
+	while(thread[i] != 0) {
+		pthread_join(thread[i], NULL);
+		i++;
+	}
+	pthread_join(end_thread, NULL);
 	
 	cout << "=> Ended chatting... Bye!" << endl;
 	
